@@ -2,7 +2,8 @@ name: 全球格局监控
 
 on:
   schedule:
-    - cron: '0 */12 * * *'
+    # 每周二、周五北京时间 08:00 运行（UTC 00:00）
+    - cron: '0 0 * * 2,5'
   workflow_dispatch:
 
 jobs:
