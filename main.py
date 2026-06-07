@@ -91,18 +91,48 @@ def run_monitor(dry_run=False):
         print(f"[INFO] 处理: {art.title[:60]}...")
         content = fetch_content(art.url)
         art.summary = ai.summarize(art.title, content)
+        
+        # AI 智能分类
+        classify_result = ai.classify(art.title, content)
+        art.content_type = classify_result.get("content_type", "国际动态")
+        art.region_tags = classify_result.get("region_tags", [])
+        print(f"[INFO] 分类结果: {art.content_type} | 地区: {', '.join(art.region_tags) if art.region_tags else '全球'}")
+        
         to_push.append(art)
 
     if not dry_run and to_push:
         bot = FeishuBot()
         date_str = datetime.now().strftime('%m-%d')
-        push_data = [{"title": a.title, "summary": a.summary, "url": a.url, "source": a.source} for a in to_push]
-        bot.send_digest(f"全球格局速报 ({date_str})", push_data)
+        
+        # 按 content_type 分组推送
+        type_groups = {}
+        for a in to_push:
+            ctype = getattr(a, 'content_type', '国际动态')
+            type_groups.setdefault(ctype, []).append(a)
+        
+        for ctype, type_arts in type_groups.items():
+            push_data = [{
+                "title": a.title,
+                "summary": a.summary,
+                "url": a.url,
+                "source": a.source,
+                "region_tags": getattr(a, 'region_tags', []),
+            } for a in type_arts]
+            
+            title = f"{ctype} ({date_str})"
+            bot.send_digest(title, push_data, content_type=ctype)
+        
         for art in to_push:
             history.add(art)
 
     print(f"\n{'='*60}")
     print(f"✅ 完成: 推送 {len(to_push)} 条")
+    type_counts = {}
+    for a in to_push:
+        ctype = getattr(a, 'content_type', '国际动态')
+        type_counts[ctype] = type_counts.get(ctype, 0) + 1
+    for ctype, count in type_counts.items():
+        print(f"  • {ctype}: {count} 条")
     print(f"{'='*60}\n")
 
 

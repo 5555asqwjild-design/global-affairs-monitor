@@ -17,7 +17,8 @@ from config import SOURCES, MAX_ARTICLES_PER_BATCH
 
 class Article:
     def __init__(self, title: str, url: str, source: str, published: Optional[datetime] = None,
-                 summary: str = "", content: str = "", author: str = ""):
+                 summary: str = "", content: str = "", author: str = "",
+                 content_type: str = "", region_tags: Optional[List[str]] = None):
         self.title = title
         self.url = url
         self.source = source
@@ -25,6 +26,8 @@ class Article:
         self.summary = summary
         self.content = content
         self.author = author
+        self.content_type = content_type or "国际动态"  # 大国博弈/区域冲突/经济战/技术竞争/价值观冲突
+        self.region_tags = region_tags or []  # 地区标签
         self.id = hashlib.md5(f"{title}:{url}".encode()).hexdigest()
 
     def to_dict(self) -> Dict:
@@ -33,6 +36,8 @@ class Article:
             "source": self.source,
             "published": self.published.isoformat() if self.published else None,
             "summary": self.summary, "author": self.author,
+            "content_type": self.content_type,
+            "region_tags": self.region_tags,
         }
 
 

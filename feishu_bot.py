@@ -46,15 +46,32 @@ class FeishuBot:
             print(f"[ERROR] 飞书请求异常: {e}")
             return False
 
-    def send_digest(self, title: str, articles: List[Dict]):
-        """发送格局速报卡片（绿色）"""
+    def send_digest(self, title: str, articles: List[Dict], content_type: str = ""):
+        """发送格局速报卡片（按分类显示不同颜色）"""
+        # 分类颜色配置
+        type_templates = {
+            "大国博弈": "red",
+            "区域冲突": "orange",
+            "经济战": "yellow",
+            "技术竞争": "purple",
+            "价值观冲突": "indigo",
+            "国际动态": "green",
+        }
+        template = type_templates.get(content_type, "green")
+        
         elements = []
         for art in articles:
+            # 地区标签
+            tags = art.get("region_tags", [])
+            tag_str = ""
+            if tags:
+                tag_str = " ".join([f"`{t}`" for t in tags]) + "\n"
+            
             elements.append({
                 "tag": "div",
                 "text": {
                     "tag": "lark_md",
-                    "content": f"**[{art['source']}]** [{art['title']}]({art['url']})\n🔍 {art.get('summary', '')}",
+                    "content": f"**[{art['source']}]** [{art['title']}]({art['url']})\n{tag_str}🔍 {art.get('summary', '')}",
                 }
             })
             elements.append({"tag": "hr"})
@@ -67,7 +84,7 @@ class FeishuBot:
                 "config": {"wide_screen_mode": True},
                 "header": {
                     "title": {"tag": "plain_text", "content": f"🌍 {title}"},
-                    "template": "green",
+                    "template": template,
                 },
                 "elements": elements,
             },
