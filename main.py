@@ -77,7 +77,15 @@ def run_monitor(dry_run=False):
         return
 
     cutoff = datetime.now() - timedelta(days=3)
-    new_articles = [a for a in articles if history.is_new(a.id) and (not a.published or a.published >= cutoff)]
+    new_articles = []
+    seen_titles = set()
+    for a in articles:
+        title_key = a.title.strip()[:50]
+        if title_key in seen_titles:
+            continue
+        seen_titles.add(title_key)
+        if history.is_new(a.id) and (not a.published or a.published >= cutoff):
+            new_articles.append(a)
 
     if not new_articles:
         print("[INFO] 没有新文章")
